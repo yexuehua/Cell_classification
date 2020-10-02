@@ -9,6 +9,7 @@ import os
 from PIL import Image
 import pandas as pd
 from tqdm import tqdm
+from dataset import *
 
 IMAGE_HEIGHT = 512
 IMAGE_WIDTH = 512
@@ -127,7 +128,7 @@ init_learning_rate = 0.1
 
 reduction_ratio = 4
 
-batch_size = 1
+batch_size = 16
 iteration = 10
 # 128 * 391 ~ 50,000
 
@@ -584,10 +585,15 @@ class SE_Inception_resnet_v2():
         x = Fully_connected(x, class_num, layer_name='final_fully_connected')
         return x
 
+# get data from the tfrecord format
 train_tfrec_name = 'train1.tfrecord'
 test_tfrec_name = "test1.tfrecord"
 train_img, train_label= inputs(train_tfrec_name, batch_size, shuffle = True)
 test_img, test_label = inputs(test_tfrec_name,batch_size,shuffle=False)
+
+# get data from the numpy
+
+
 
 image_size = 512
 img_channels = 4
@@ -631,16 +637,17 @@ with tf.Session() as sess:
         train_loss = 0.0
 
         for step in tqdm(range(1, iteration + 1)):
+            batch_x,batch_y = get_bacth_data("image/train",512,4,batch_size)
+            # batch_x, y = sess.run([train_img, train_label])
+            # print("----here")
+            # print(np.shape(batch_x))
+            # batch_y = np.zeros(shape=[batch_size, num_classes])
+            # for i in range(batch_size):
+            #     batch_y[i, y[i]] = 1
 
-            batch_x, y = sess.run([train_img, train_label])
-            print("----here")
-            print(np.shape(batch_x))
-            batch_y = np.zeros(shape=[batch_size, num_classes])
-            for i in range(batch_size):
-                batch_y[i, y[i]] = 1
 
             # print("================================================================")
-            batch_x = np.reshape(batch_x, [batch_size, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNELS])
+            #batch_x = np.reshape(batch_x, [batch_size, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNELS])
             # if pre_index + batch_size < 50000:
             #     batch_x = train_x[pre_index: pre_index + batch_size]
             #     batch_y = train_y[pre_index: pre_index + batch_size]
