@@ -8,6 +8,7 @@ import time
 import os
 from PIL import Image
 import pandas as pd
+from tqdm import tqdm
 
 IMAGE_HEIGHT = 512
 IMAGE_WIDTH = 512
@@ -126,8 +127,8 @@ init_learning_rate = 0.1
 
 reduction_ratio = 4
 
-batch_size = 16
-iteration = 100
+batch_size = 1
+iteration = 10
 # 128 * 391 ~ 50,000
 
 test_iteration = 10
@@ -305,7 +306,8 @@ def Sigmoid(x):
 def Global_Average_Pooling(x):
     x_shape = x.get_shape()
     avg_pool = AveragePooling2D((x_shape[1], x_shape[2]), strides=1)(x)
-    return tf.squeeze(avg_pool)
+    avg_pool = tf.reshape(avg_pool,[-1,avg_pool.get_shape()[-1]])
+    return avg_pool
 
 
 def Max_pooling(x, pool_size=[3, 3], stride=2, padding='VALID'):
@@ -529,7 +531,6 @@ class SE_Inception_resnet_v2():
     def Squeeze_excitation_layer(self, input_x, out_dim, ratio, layer_name):
         with tf.name_scope(layer_name):
             squeeze = Global_Average_Pooling(input_x)
-
             excitation = Fully_connected(squeeze, units=out_dim / ratio, layer_name=layer_name + '_fully_connected1')
             excitation = Relu(excitation)
             excitation = Fully_connected(excitation, units=out_dim, layer_name=layer_name + '_fully_connected2')
@@ -541,7 +542,7 @@ class SE_Inception_resnet_v2():
             return scale
 
     def Build_SEnet(self, input_x):
-        input_x = tf.pad(input_x, [[0, 0], [32, 32], [32, 32], [0, 0]])
+        #input_x = tf.pad(input_x, [[0, 0], [32, 32], [32, 32], [0, 0]])
         # size 32 -> 96
         print(np.shape(input_x))
         # only cifar10 architecture
@@ -580,11 +581,11 @@ class SE_Inception_resnet_v2():
         x = Dropout(x, rate=0.2, training=self.training)
         x = flatten(x)
 
-        x = Fully_connected(x, layer_name='final_fully_connected')
+        x = Fully_connected(x, class_num, layer_name='final_fully_connected')
         return x
 
-train_tfrec_name = 'train.tfrecord'
-test_tfrec_name = "test.tfrecord"
+train_tfrec_name = 'train1.tfrecord'
+test_tfrec_name = "test1.tfrecord"
 train_img, train_label= inputs(train_tfrec_name, batch_size, shuffle = True)
 test_img, test_label = inputs(test_tfrec_name,batch_size,shuffle=False)
 
@@ -629,9 +630,11 @@ with tf.Session() as sess:
         train_acc = 0.0
         train_loss = 0.0
 
-        for step in range(1, iteration + 1):
+        for step in tqdm(range(1, iteration + 1)):
 
             batch_x, y = sess.run([train_img, train_label])
+            print("----here")
+            print(np.shape(batch_x))
             batch_y = np.zeros(shape=[batch_size, num_classes])
             for i in range(batch_size):
                 batch_y[i, y[i]] = 1
