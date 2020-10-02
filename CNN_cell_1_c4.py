@@ -120,46 +120,7 @@ def createFruitTestTFRecordsFile(data_path):
 #                20: 'Grape White', 21: 'Grapefruit', 22: 'Kaki', 23: 'Kiwi', 24: 'Kumquats', 25: 'Lemon', 26: 'Limes', 27: 'Litchi',
 #                28: 'Mango', 29: 'Nectarine', 30: 'Orange', 31: 'Papaya', 32: 'Passion Fruit', 33: 'Peach', 34: 'Peach Flat',
 #                35: 'Pear', 36: 'Pear Monster', 37: 'Plum', 38: 'Pomegranate', 39: 'Quince', 40: 'Strawberry'}
-# ===== flowing senet-inception config
-weight_decay = 0.0005
-momentum = 0.9
 
-init_learning_rate = 0.1
-
-reduction_ratio = 4
-
-batch_size = 16
-iteration = 10
-# 128 * 391 ~ 50,000
-
-test_iteration = 10
-
-total_epochs = 1000
-# ====== above from senet-inception
-
-train_samples_size = 480
-test_samples_size = 120
-cell_dict = {0:'PC9',1:'PC9GR'}
-
-# parameters
-# learningRate = 0.001
-# lr_start = 0.001
-# lr_end = 0.0001
-# learning_rate = lr_start
-
-# num_steps = 1000
-# batch_size = 32
-# # update_step = 100
-# display_step = 10
-# train_acc_target = 1
-# train_acc_target_cnt = train_samples_size/batch_size
-# if train_acc_target_cnt>20:
-#     train_acc_target_cnt = 20
-
-# network parameters
-num_input = IMAGE_HEIGHT*IMAGE_WIDTH*IMAGE_CHANNELS
-num_classes = len(cell_dict)
-dropout = 0.4
 
 # # saver train parameters
 # useCkpt = False
@@ -593,7 +554,46 @@ test_img, test_label = inputs(test_tfrec_name,batch_size,shuffle=False)
 
 # get data from the numpy
 
+# ===== flowing senet-inception config
+weight_decay = 0.0005
+momentum = 0.9
 
+init_learning_rate = 0.1
+
+reduction_ratio = 4
+
+batch_size = 16
+iteration = 10
+# 128 * 391 ~ 50,000
+
+test_iteration = 10
+
+total_epochs = 1000
+# ====== above from senet-inception
+
+train_samples_size = 480
+test_samples_size = 120
+cell_dict = {0:'PC9',1:'PC9GR'}
+
+# parameters
+# learningRate = 0.001
+# lr_start = 0.001
+# lr_end = 0.0001
+# learning_rate = lr_start
+
+# num_steps = 1000
+# batch_size = 32
+# # update_step = 100
+# display_step = 10
+# train_acc_target = 1
+# train_acc_target_cnt = train_samples_size/batch_size
+# if train_acc_target_cnt>20:
+#     train_acc_target_cnt = 20
+
+# network parameters
+num_input = IMAGE_HEIGHT*IMAGE_WIDTH*IMAGE_CHANNELS
+num_classes = len(cell_dict)
+dropout = 0.4
 
 image_size = 512
 img_channels = 4
