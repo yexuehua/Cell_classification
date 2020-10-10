@@ -10,6 +10,8 @@ from PIL import Image
 import pandas as pd
 from tqdm import tqdm
 from dataset import *
+import pdb
+
 
 IMAGE_HEIGHT = 512
 IMAGE_WIDTH = 512
@@ -307,6 +309,9 @@ def Evaluate(sess):
         # test_batch_x = test_x[test_pre_index: test_pre_index + add]
         # test_batch_y = test_y[test_pre_index: test_pre_index + add]
         # test_pre_index = test_pre_index + add
+        testdataGene = get_batch_data("images/pre_data4/test",512,4,batch_size)
+        test_batch_x,test_batch_y = next(testdataGene)
+        """
 
         test_batch_x, y = sess.run([test_img, test_label])
         test_batch_y = np.zeros(shape=[batch_size, num_classes])
@@ -315,6 +320,7 @@ def Evaluate(sess):
 
         # print("================================================================")
         test_batch_x = np.reshape(test_batch_x, [batch_size, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNELS])
+        """
 
         test_feed_dict = {
             x: test_batch_x,
@@ -547,10 +553,10 @@ class SE_Inception_resnet_v2():
         return x
 
 # get data from the tfrecord format
-train_tfrec_name = 'train1.tfrecord'
-test_tfrec_name = "test1.tfrecord"
-train_img, train_label= inputs(train_tfrec_name, batch_size, shuffle = True)
-test_img, test_label = inputs(test_tfrec_name,batch_size,shuffle=False)
+#train_tfrec_name = 'train1.tfrecord'
+#test_tfrec_name = "test1.tfrecord"
+#train_img, train_label= inputs(train_tfrec_name, batch_size, shuffle = True)
+#test_img, test_label = inputs(test_tfrec_name,batch_size,shuffle=False)
 
 # get data from the numpy
 
@@ -558,12 +564,12 @@ test_img, test_label = inputs(test_tfrec_name,batch_size,shuffle=False)
 weight_decay = 0.0005
 momentum = 0.9
 
-init_learning_rate = 0.1
+init_learning_rate = 0.001
 
 reduction_ratio = 4
 
 batch_size = 16
-iteration = 10
+iteration = 16
 # 128 * 391 ~ 50,000
 
 test_iteration = 10
@@ -637,7 +643,10 @@ with tf.Session() as sess:
         train_loss = 0.0
 
         for step in tqdm(range(1, iteration + 1)):
-            batch_x,batch_y = get_bacth_data("image/train",512,4,batch_size)
+            #pdb.set_trace()
+            dataGene = get_batch_data("images/pre_data4/train",512,4,batch_size)
+            batch_x,batch_y = next(dataGene)
+            #print(batch_x.shape,batch_y.shape)
             # batch_x, y = sess.run([train_img, train_label])
             # print("----here")
             # print(np.shape(batch_x))
