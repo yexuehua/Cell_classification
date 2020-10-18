@@ -2,3 +2,4 @@ images/
 w2-data/
 *.tfrecord
 logs/
+.idea/

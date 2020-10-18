@@ -8,6 +8,8 @@ def get_merge_img(path, file_list, img_size, c, index):
     for i,img_name in enumerate(file_list[index]):
         img_path = os.path.join(path,img_name)
         img = cv2.imread(img_path,cv2.IMREAD_GRAYSCALE)
+        clahe = cv2.createCLAHE(clipLimit=2.0,tileGridSize=(8,8))
+        clahe_img = clahe.apply(img)
         merge_image[:][:][i] = img
     return merge_image
 
