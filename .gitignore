@@ -3,3 +3,4 @@ w2-data/
 *.tfrecord
 logs/
 model/
+.idea/
