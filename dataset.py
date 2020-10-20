@@ -10,7 +10,7 @@ def get_merge_img(path, file_list, img_size, c, index):
         img = cv2.imread(img_path,cv2.IMREAD_GRAYSCALE)
         clahe = cv2.createCLAHE(clipLimit=2.0,tileGridSize=(8,8))
         clahe_img = clahe.apply(img)
-        merge_image[:][:][i] = img
+        merge_image[:,:,i] = img/255
     return merge_image
 
 

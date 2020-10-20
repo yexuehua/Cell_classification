@@ -562,9 +562,9 @@ class SE_Inception_resnet_v2():
 
 # ===== flowing senet-inception config
 weight_decay = 0.0005
-momentum = 0.9
+momentum = 0.5
 
-init_learning_rate = 0.001
+init_learning_rate = 0.01
 
 reduction_ratio = 4
 
@@ -599,7 +599,7 @@ cell_dict = {0:'PC9',1:'PC9GR'}
 # network parameters
 num_input = IMAGE_HEIGHT*IMAGE_WIDTH*IMAGE_CHANNELS
 num_classes = len(cell_dict)
-dropout = 0.4
+dropout = 0.7
 
 image_size = 512
 img_channels = 4
