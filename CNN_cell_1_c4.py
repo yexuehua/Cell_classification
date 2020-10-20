@@ -17,6 +17,9 @@ import pdb
 IMAGE_HEIGHT = 512
 IMAGE_WIDTH = 512
 IMAGE_CHANNELS = 4
+image_size = 32
+img_channels = 3
+class_num = 10
 
 # data_path = './fruits-360/'
 
@@ -256,7 +259,7 @@ def conv_layer(input, filter, kernel, stride=1, padding='SAME', layer_name="conv
         return network
 
 
-def Fully_connected(x, units=num_classes, layer_name='fully_connected'):
+def Fully_connected(x, units=class_num, layer_name='fully_connected'):
     with tf.name_scope(layer_name):
         return tf.layers.dense(inputs=x, use_bias=True, units=units)
 
@@ -609,12 +612,9 @@ cell_dict = {0:'PC9',1:'PC9GR'}
 
 # network parameters
 num_input = IMAGE_HEIGHT*IMAGE_WIDTH*IMAGE_CHANNELS
-num_classes = len(cell_dict)
+#num_classes = len(cell_dict)
 dropout = 0.7
 
-image_size = 32
-img_channels = 3
-class_num = 10
 x = tf.placeholder(tf.float32, shape=[None, image_size, image_size, img_channels])
 label = tf.placeholder(tf.float32, shape=[None, class_num])
 
@@ -656,8 +656,8 @@ with tf.Session() as sess:
         for step in tqdm(range(1, iteration + 1)):
             #pdb.set_trace()
             # /for PC9 data
-            dataGene = get_batch_data("images/pre_data4/train",512,4,batch_size)
-            batch_x,batch_y = next(dataGene)
+            #dataGene = get_batch_data("images/pre_data4/train",512,4,batch_size)
+            #batch_x,batch_y = next(dataGene)
             # for PC9 data
             
             #print(batch_x.shape,batch_y.shape)
