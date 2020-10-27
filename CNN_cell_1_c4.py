@@ -576,19 +576,19 @@ train_x, test_x = color_preprocessing(train_x, test_x)
 # get data from the numpy
 # ===== flowing senet-inception config
 weight_decay = 0.0005
-momentum = 0.5
+momentum = 0.9
 
 init_learning_rate = 0.01
 
 reduction_ratio = 4
 
-batch_size = 16
-iteration = 16
+batch_size = 128
+iteration = 391
 # 128 * 391 ~ 50,000
 
 test_iteration = 10
 
-total_epochs = 1000
+total_epochs = 100
 # ====== above from senet-inception
 
 train_samples_size = 480
