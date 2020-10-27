@@ -5,3 +5,5 @@ logs/
 model/
 .idea/
 *.gz
+cifar-10-batches-py/
+

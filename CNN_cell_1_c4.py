@@ -521,7 +521,7 @@ class SE_Inception_resnet_v2():
             return scale
 
     def Build_SEnet(self, input_x):
-        #input_x = tf.pad(input_x, [[0, 0], [32, 32], [32, 32], [0, 0]])
+        input_x = tf.pad(input_x, [[0, 0], [32, 32], [32, 32], [0, 0]])
         # size 32 -> 96
         print(np.shape(input_x))
         # only cifar10 architecture
@@ -553,8 +553,8 @@ class SE_Inception_resnet_v2():
             channel = int(np.shape(x)[-1])
             x = self.Squeeze_excitation_layer(x, out_dim=channel, ratio=reduction_ratio, layer_name='SE_C' + str(i))
 
-        # channel = int(np.shape(x)[-1])
-        # x = self.Squeeze_excitation_layer(x, out_dim=channel, ratio=reduction_ratio, layer_name='SE_C')
+        channel = int(np.shape(x)[-1])
+        x = self.Squeeze_excitation_layer(x, out_dim=channel, ratio=reduction_ratio, layer_name='SE_C')
 
         x = Global_Average_Pooling(x)
         x = Dropout(x, rate=0.2, training=self.training)
@@ -578,12 +578,12 @@ train_x, test_x = color_preprocessing(train_x, test_x)
 weight_decay = 0.0005
 momentum = 0.5
 
-init_learning_rate = 0.01
+init_learning_rate = 0.1
 
 reduction_ratio = 4
 
-batch_size = 16
-iteration = 16
+batch_size = 128
+iteration = 391
 # 128 * 391 ~ 50,000
 
 test_iteration = 10
