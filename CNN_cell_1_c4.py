@@ -17,9 +17,9 @@ import pdb
 IMAGE_HEIGHT = 512
 IMAGE_WIDTH = 512
 IMAGE_CHANNELS = 4
-image_size = 32
-img_channels = 3
-class_num = 10
+#image_size = 32
+#img_channels = 3
+#class_num = 10
 
 # data_path = './fruits-360/'
 
@@ -307,21 +307,21 @@ def Dropout(x, rate, training):
 def Evaluate(sess):
     test_acc = 0.0
     test_loss = 0.0
-    test_pre_index = 0
-    add = 1000
+    #test_pre_index = 0
+    #add = 1000
 
     for it in range(test_iteration):
+        """
         test_batch_x = test_x[test_pre_index: test_pre_index + add]
         test_batch_y = test_y[test_pre_index: test_pre_index + add]
         test_pre_index = test_pre_index + add
-        test_pre_index = test_pre_index + add
-        
-        
+        """
+
         # /for PC9 data
-        # testdataGene = get_batch_data("images/pre_data4/test",512,4,batch_size)
-        # test_batch_x,test_batch_y = next(testdataGene)
+        testdataGene = get_batch_data("images/pre_data4/test",512,4,batch_size)
+        test_batch_x,test_batch_y = next(testdataGene)
         # for PC9 data
-        
+       
         """
 
         test_batch_x, y = sess.run([test_img, test_label])
@@ -573,6 +573,7 @@ class SE_Inception_resnet_v2():
 # get data from cifar10
 train_x, train_y, test_x, test_y = prepare_data()
 train_x, test_x = color_preprocessing(train_x, test_x)
+print('now output:',test_x.shape)
 # get data from the numpy
 # ===== flowing senet-inception config
 weight_decay = 0.0005
@@ -588,7 +589,7 @@ iteration = 391
 
 test_iteration = 10
 
-total_epochs = 100
+total_epochs = 500
 # ====== above from senet-inception
 
 train_samples_size = 480
@@ -700,6 +701,7 @@ with tf.Session() as sess:
 
         train_summary = tf.Summary(value=[tf.Summary.Value(tag='train_loss', simple_value=train_loss),
                                           tf.Summary.Value(tag='train_accuracy', simple_value=train_acc)])
+        #pdb.set_trace()
 
         test_acc, test_loss, test_summary = Evaluate(sess)
 
