@@ -90,7 +90,7 @@ training_flag = tf.placeholder(tf.bool)
 
 learning_rate = tf.placeholder(tf.float32, name='learning_rate')
 
-logits = SE_Inception_resnet_v2(x, class_num, training=training_flag).model
+logits = SE_Inception_resnet_v2(x, class_num, reduction_ratio, training=training_flag).model
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=label, logits=logits))
 
 l2_loss = tf.add_n([tf.nn.l2_loss(var) for var in tf.trainable_variables()])
