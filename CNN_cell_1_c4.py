@@ -70,15 +70,15 @@ weight_decay = 0.0005
 momentum = 0.9
 init_learning_rate = 0.1
 reduction_ratio = 4
-batch_size = 128
-iteration = 391
+batch_size = 16
+iteration = 30
 # 128 * 391 ~ 50,000
 test_iteration = 10
 total_epochs = 500
 image_size = 512
 img_channels = 4
 dropout = 0.7
-class_num = 1
+class_num = 2
 # ================ config ===============
 
 
