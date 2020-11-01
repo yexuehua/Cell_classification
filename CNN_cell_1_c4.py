@@ -169,37 +169,6 @@ def maxpool2d(x, k=1):
 def avgpool2d(x):
     return tf.nn.avg_pool(x,ksize=[1,9,9,1],strides=[1,9,9,1],padding='SAME')
 
-def conv_net(X, weights, biases):
-    X = tf.reshape(X, shape=[-1, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNELS])
-
-    # convolustion layer
-    conv1 = conv2d(X, weights['wc1'], biases['bc1'])
-    # max pooling (down-sampling)
-    conv1 = maxpool2d(conv1, k=3)
-
-    # convolustion layer
-    conv2 = conv2d(conv1, weights['wc2'], biases['bc2'])
-    # max pooling (down-sampling)
-    conv2 = maxpool2d(conv2, k=3)
-
-    # apply dropout
-    #conv2 = tf.nn.dropout(conv2, 0.3)
-
-    # convolustion layer
-    conv3 = conv2d(conv2, weights['wc3'], biases['bc3'])
-    # max pooling (down-sampling)
-    conv3 = maxpool2d(conv3, k=3)
-
-    # apply dropout
-    #conv3 = tf.nn.dropout(conv3, 0.3)
-
-    # convolustion layer
-    conv4 = conv2d(conv3, weights['wc4'], biases['bc4'])
-    # max pooling (down-sampling)
-    conv4 = maxpool2d(conv4, k=3)
-
-    # apply dropout
-    #conv4 = tf.nn.dropout(conv4, 0.3)
 
     # convolustion layer
     conv5 = conv2d(conv4, weights['wc5'], biases['bc5'])
