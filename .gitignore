@@ -2,3 +2,5 @@ images/
 w2-data/
 *.tfrecord
 .idea/
+model/
+*.pyc

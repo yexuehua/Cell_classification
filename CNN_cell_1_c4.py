@@ -147,87 +147,304 @@ useCkpt = False
 # tf graph input
 X = tf.placeholder(tf.float32,[None,num_input])
 Y = tf.placeholder(tf.float32,[None,num_classes])
-keep_prob = tf.placeholder(tf.float32)
 
 
+weight_decay = 0.0005
+momentum = 0.9
+
+init_learning_rate = 0.1
+
+reduction_ratio = 4
+
+batch_size = 128
+iteration = 391
+# 128 * 391 ~ 50,000
+
+test_iteration = 10
+
+total_epochs = 100
+
+def conv_layer(input, filter, kernel, stride=1, padding='SAME', layer_name="conv", activation=True):
+    with tf.name_scope(layer_name):
+        network = tf.layers.conv2d(inputs=input, use_bias=True, filters=filter, kernel_size=kernel, strides=stride, padding=padding)
+        if activation :
+            network = Relu(network)
+        return network
+
+def Fully_connected(x, units=class_num, layer_name='fully_connected') :
+    with tf.name_scope(layer_name) :
+        return tf.layers.dense(inputs=x, use_bias=True, units=units)
+
+def Relu(x):
+    return tf.nn.relu(x)
+
+def Sigmoid(x):
+    return tf.nn.sigmoid(x)
+
+def Global_Average_Pooling(x):
+    x_shape = x.get_shape()
+    avg_pool = AveragePooling2D((x_shape[1], x_shape[2]), strides=1)(x)
+    avg_pool = tf.reshape(avg_pool, [-1, avg_pool.get_shape()[-1]])
+    return avg_pool
+
+def Max_pooling(x, pool_size=[3,3], stride=2, padding='VALID') :
+    return tf.layers.max_pooling2d(inputs=x, pool_size=pool_size, strides=stride, padding=padding)
+
+def Batch_Normalization(x, training, scope):
+    with arg_scope([batch_norm],
+                   scope=scope,
+                   updates_collections=None,
+                   decay=0.9,
+                   center=True,
+                   scale=True,
+                   zero_debias_moving_mean=True) :
+        return tf.cond(training,
+                       lambda : batch_norm(inputs=x, is_training=training, reuse=None),
+                       lambda : batch_norm(inputs=x, is_training=training, reuse=True))
+
+def Concatenation(layers) :
+    return tf.concat(layers, axis=3)
+
+def Dropout(x, rate, training) :
+    return tf.layers.dropout(inputs=x, rate=rate, training=training)
+
+def Evaluate(sess):
+    test_acc = 0.0
+    test_loss = 0.0
+    test_pre_index = 0
+    add = 1000
+
+    for it in range(test_iteration):
+        test_batch_x = test_x[test_pre_index: test_pre_index + add]
+        test_batch_y = test_y[test_pre_index: test_pre_index + add]
+        test_pre_index = test_pre_index + add
+
+        test_feed_dict = {
+            x: test_batch_x,
+            label: test_batch_y,
+            learning_rate: epoch_learning_rate,
+            training_flag: False
+        }
+
+        loss_, acc_ = sess.run([cost, accuracy], feed_dict=test_feed_dict)
+
+        test_loss += loss_
+        test_acc += acc_
+
+    test_loss /= test_iteration # average loss
+    test_acc /= test_iteration # average accuracy
+
+    summary = tf.Summary(value=[tf.Summary.Value(tag='test_loss', simple_value=test_loss),
+                                tf.Summary.Value(tag='test_accuracy', simple_value=test_acc)])
+
+    return test_acc, test_loss, summary
+
+class SE_Inception_resnet_v2():
+    def __init__(self, x, training):
+        self.training = training
+        self.model = self.Build_SEnet(x)
+
+    def Stem(self, x, scope):
+        with tf.name_scope(scope) :
+            x = conv_layer(x, filter=32, kernel=[3,3], stride=2, padding='VALID', layer_name=scope+'_conv1')
+            x = conv_layer(x, filter=32, kernel=[3,3], padding='VALID', layer_name=scope+'_conv2')
+            block_1 = conv_layer(x, filter=64, kernel=[3,3], layer_name=scope+'_conv3')
+
+            split_max_x = Max_pooling(block_1)
+            split_conv_x = conv_layer(block_1, filter=96, kernel=[3,3], stride=2, padding='VALID', layer_name=scope+'_split_conv1')
+            x = Concatenation([split_max_x,split_conv_x])
+
+            split_conv_x1 = conv_layer(x, filter=64, kernel=[1,1], layer_name=scope+'_split_conv2')
+            split_conv_x1 = conv_layer(split_conv_x1, filter=96, kernel=[3,3], padding='VALID', layer_name=scope+'_split_conv3')
+
+            split_conv_x2 = conv_layer(x, filter=64, kernel=[1,1], layer_name=scope+'_split_conv4')
+            split_conv_x2 = conv_layer(split_conv_x2, filter=64, kernel=[7,1], layer_name=scope+'_split_conv5')
+            split_conv_x2 = conv_layer(split_conv_x2, filter=64, kernel=[1,7], layer_name=scope+'_split_conv6')
+            split_conv_x2 = conv_layer(split_conv_x2, filter=96, kernel=[3,3], padding='VALID', layer_name=scope+'_split_conv7')
+
+            x = Concatenation([split_conv_x1,split_conv_x2])
+
+            split_conv_x = conv_layer(x, filter=192, kernel=[3,3], stride=2, padding='VALID', layer_name=scope+'_split_conv8')
+            split_max_x = Max_pooling(x)
+
+            x = Concatenation([split_conv_x, split_max_x])
+
+            x = Batch_Normalization(x, training=self.training, scope=scope+'_batch1')
+            x = Relu(x)
+
+            return x
+
+    def Inception_resnet_A(self, x, scope):
+        with tf.name_scope(scope) :
+            init = x
+
+            split_conv_x1 = conv_layer(x, filter=32, kernel=[1,1], layer_name=scope+'_split_conv1')
+
+            split_conv_x2 = conv_layer(x, filter=32, kernel=[1,1], layer_name=scope+'_split_conv2')
+            split_conv_x2 = conv_layer(split_conv_x2, filter=32, kernel=[3,3], layer_name=scope+'_split_conv3')
+
+            split_conv_x3 = conv_layer(x, filter=32, kernel=[1,1], layer_name=scope+'_split_conv4')
+            split_conv_x3 = conv_layer(split_conv_x3, filter=48, kernel=[3,3], layer_name=scope+'_split_conv5')
+            split_conv_x3 = conv_layer(split_conv_x3, filter=64, kernel=[3,3], layer_name=scope+'_split_conv6')
+
+            x = Concatenation([split_conv_x1,split_conv_x2,split_conv_x3])
+            x = conv_layer(x, filter=384, kernel=[1,1], layer_name=scope+'_final_conv1', activation=False)
+
+            x = x*0.1
+            x = init + x
+
+            x = Batch_Normalization(x, training=self.training, scope=scope+'_batch1')
+            x = Relu(x)
+
+            return x
+
+    def Inception_resnet_B(self, x, scope):
+        with tf.name_scope(scope) :
+            init = x
+
+            split_conv_x1 = conv_layer(x, filter=192, kernel=[1,1], layer_name=scope+'_split_conv1')
+
+            split_conv_x2 = conv_layer(x, filter=128, kernel=[1,1], layer_name=scope+'_split_conv2')
+            split_conv_x2 = conv_layer(split_conv_x2, filter=160, kernel=[1,7], layer_name=scope+'_split_conv3')
+            split_conv_x2 = conv_layer(split_conv_x2, filter=192, kernel=[7,1], layer_name=scope+'_split_conv4')
+
+            x = Concatenation([split_conv_x1, split_conv_x2])
+            x = conv_layer(x, filter=1152, kernel=[1,1], layer_name=scope+'_final_conv1', activation=False)
+            # 1154
+            x = x * 0.1
+            x = init + x
+
+            x = Batch_Normalization(x, training=self.training, scope=scope+'_batch1')
+            x = Relu(x)
+
+            return x
+
+    def Inception_resnet_C(self, x, scope):
+        with tf.name_scope(scope) :
+            init = x
+
+            split_conv_x1 = conv_layer(x, filter=192, kernel=[1,1], layer_name=scope+'_split_conv1')
+
+            split_conv_x2 = conv_layer(x, filter=192, kernel=[1, 1], layer_name=scope + '_split_conv2')
+            split_conv_x2 = conv_layer(split_conv_x2, filter=224, kernel=[1, 3], layer_name=scope + '_split_conv3')
+            split_conv_x2 = conv_layer(split_conv_x2, filter=256, kernel=[3, 1], layer_name=scope + '_split_conv4')
+
+            x = Concatenation([split_conv_x1,split_conv_x2])
+            x = conv_layer(x, filter=2144, kernel=[1,1], layer_name=scope+'_final_conv2', activation=False)
+            # 2048
+            x = x * 0.1
+            x = init + x
+
+            x = Batch_Normalization(x, training=self.training, scope=scope+'_batch1')
+            x = Relu(x)
+
+            return x
+
+    def Reduction_A(self, x, scope):
+        with tf.name_scope(scope) :
+            k = 256
+            l = 256
+            m = 384
+            n = 384
+
+            split_max_x = Max_pooling(x)
+
+            split_conv_x1 = conv_layer(x, filter=n, kernel=[3,3], stride=2, padding='VALID', layer_name=scope+'_split_conv1')
+
+            split_conv_x2 = conv_layer(x, filter=k, kernel=[1,1], layer_name=scope+'_split_conv2')
+            split_conv_x2 = conv_layer(split_conv_x2, filter=l, kernel=[3,3], layer_name=scope+'_split_conv3')
+            split_conv_x2 = conv_layer(split_conv_x2, filter=m, kernel=[3,3], stride=2, padding='VALID', layer_name=scope+'_split_conv4')
+
+            x = Concatenation([split_max_x, split_conv_x1, split_conv_x2])
+
+            x = Batch_Normalization(x, training=self.training, scope=scope+'_batch1')
+            x = Relu(x)
+
+            return x
+
+    def Reduction_B(self, x, scope):
+        with tf.name_scope(scope) :
+            split_max_x = Max_pooling(x)
+
+            split_conv_x1 = conv_layer(x, filter=256, kernel=[1,1], layer_name=scope+'_split_conv1')
+            split_conv_x1 = conv_layer(split_conv_x1, filter=384, kernel=[3,3], stride=2, padding='VALID', layer_name=scope+'_split_conv2')
+
+            split_conv_x2 = conv_layer(x, filter=256, kernel=[1,1], layer_name=scope+'_split_conv3')
+            split_conv_x2 = conv_layer(split_conv_x2, filter=288, kernel=[3,3], stride=2, padding='VALID', layer_name=scope+'_split_conv4')
+
+            split_conv_x3 = conv_layer(x, filter=256, kernel=[1,1], layer_name=scope+'_split_conv5')
+            split_conv_x3 = conv_layer(split_conv_x3, filter=288, kernel=[3,3], layer_name=scope+'_split_conv6')
+            split_conv_x3 = conv_layer(split_conv_x3, filter=320, kernel=[3,3], stride=2, padding='VALID', layer_name=scope+'_split_conv7')
+
+            x = Concatenation([split_max_x, split_conv_x1, split_conv_x2, split_conv_x3])
+
+            x = Batch_Normalization(x, training=self.training, scope=scope+'_batch1')
+            x = Relu(x)
+
+            return x
+
+    def Squeeze_excitation_layer(self, input_x, out_dim, ratio, layer_name):
+        with tf.name_scope(layer_name) :
 
 
-# create some wrappers for simplicity
-def conv2d(x, W, b, strides=1):
-    # conv2d wrapper, with bias and relu activation
-    x = tf.nn.conv2d(x, W, strides=[1, strides, strides, 1], padding='SAME')
-    # x = tf.nn.conv3d(x,W,strides=[1,strides,strides,strides,1],padding='SAME')
-    x = tf.nn.bias_add(x,b)
-    # return tf.nn.relu(x)
-    # return tf.nn.softplus(x)
-    return tf.nn.swish(x)
+            squeeze = Global_Average_Pooling(input_x)
 
-def maxpool2d(x, k=1):
-    # max2d wrapper
-    return tf.nn.max_pool(x,ksize=[1,k,k,1],strides=[1,k,k,1],padding='SAME')
+            excitation = Fully_connected(squeeze, units=out_dim / ratio, layer_name=layer_name+'_fully_connected1')
+            excitation = Relu(excitation)
+            excitation = Fully_connected(excitation, units=out_dim, layer_name=layer_name+'_fully_connected2')
+            excitation = Sigmoid(excitation)
 
-def avgpool2d(x):
-    return tf.nn.avg_pool(x,ksize=[1,9,9,1],strides=[1,9,9,1],padding='SAME')
+            excitation = tf.reshape(excitation, [-1,1,1,out_dim])
+            scale = input_x * excitation
 
+            return scale
 
-    # convolustion layer
-    conv5 = conv2d(conv4, weights['wc5'], biases['bc5'])
-    # max pooling (down-sampling)
-    conv5 = maxpool2d(conv5, k=2)
+    def Build_SEnet(self, input_x):
+        #input_x = tf.pad(input_x, [[0, 0], [32, 32], [32, 32], [0, 0]])
+        # size 32 -> 96
+        print(np.shape(input_x))
+        # only cifar10 architecture
 
-    # apply dropout
-    #conv5 = tf.nn.dropout(conv5, 0.3)
+        input_x = tf.reshape(input_x, shape=[-1, IMAGE_HIGHT, IMAGE_WIDTH,
+                                             IMAGE_CHANNELS])
+        x = self.Stem(input_x, scope='stem')
 
-    shape = conv5.get_shape()
-    # fully connected layer
-    # fc1 = tf.reshape(conv5, shape=[-1,weights['wd1'].get_shape().as_list()[0]])
-    fc1 = tf.reshape(conv5, shape=[-1, shape[1] * shape[2] * shape[3]])
-    # print('conv4 shape:', conv4.shape, ', fc1 shape:', fc1.shape)
-    # fc1 = tf.add(tf.matmul(fc1,weights['wd1']), biases['bd1'])
-    w = tf.Variable(tf.random_normal([shape[1].value * shape[2].value * shape[3].value, 2048]), dtype=tf.float32)
-    fc1 = tf.add(tf.matmul(fc1, w), biases['bd1'])
-    fc1 = tf.nn.relu(fc1)
+        for i in range(5) :
+            x = self.Inception_resnet_A(x, scope='Inception_A'+str(i))
+            channel = int(np.shape(x)[-1])
+            x = self.Squeeze_excitation_layer(x, out_dim=channel, ratio=reduction_ratio, layer_name='SE_A'+str(i))
 
-    # apply dropout
-    #fc1 = tf.nn.dropout(fc1, dropout)
+        x = self.Reduction_A(x, scope='Reduction_A')
+   
+        channel = int(np.shape(x)[-1])
+        x = self.Squeeze_excitation_layer(x, out_dim=channel, ratio=reduction_ratio, layer_name='SE_A')
 
-    # output, class prediction
-    out = tf.add(tf.matmul(fc1, weights['out']), biases['out'])
-    return out
+        for i in range(10)  :
+            x = self.Inception_resnet_B(x, scope='Inception_B'+str(i))
+            channel = int(np.shape(x)[-1])
+            x = self.Squeeze_excitation_layer(x, out_dim=channel, ratio=reduction_ratio, layer_name='SE_B'+str(i))
 
-# store layers weighta and bias
-weights = {
-    # 5x5 conv, 3 inputs, 16 outpus
-    'wc1': tf.get_variable('wc1',[3,3,4,8],initializer=tf.contrib.layers.xavier_initializer_conv2d()),
-    # 5x5 conv, 16 input, 32 outpus
-    'wc2': tf.get_variable('wc2',[3,3,8,16],initializer=tf.contrib.layers.xavier_initializer_conv2d()),
-    # 5x5 conv, 32 inputs, 64 outputs
-    'wc3': tf.get_variable('wc3',[3,3,16,32],initializer=tf.contrib.layers.xavier_initializer_conv2d()),
-    # 5x5 conv, 64 inputs, 128 outputs
-    'wc4': tf.get_variable('wc4',[3,3,32,64],initializer=tf.contrib.layers.xavier_initializer_conv2d()),
-    # 5x5 conv, 128 inputs, 256 outputs
-    'wc5': tf.get_variable('wc5', [3, 3, 64, 64], initializer=tf.contrib.layers.xavier_initializer_conv2d()),
+        x = self.Reduction_B(x, scope='Reduction_B')
+        
+        channel = int(np.shape(x)[-1])
+        x = self.Squeeze_excitation_layer(x, out_dim=channel, ratio=reduction_ratio, layer_name='SE_B')
 
-    'wc6': tf.get_variable('wc6', [3, 3, 64, 32], initializer=tf.contrib.layers.xavier_initializer_conv2d()),
-    'wc7': tf.get_variable('wc7', [3, 3, 32, 4], initializer=tf.contrib.layers.xavier_initializer_conv2d()),
+        for i in range(5) :
+            x = self.Inception_resnet_C(x, scope='Inception_C'+str(i))
+            channel = int(np.shape(x)[-1])
+            x = self.Squeeze_excitation_layer(x, out_dim=channel, ratio=reduction_ratio, layer_name='SE_C'+str(i))
+         
+            
+        # channel = int(np.shape(x)[-1])
+        # x = self.Squeeze_excitation_layer(x, out_dim=channel, ratio=reduction_ratio, layer_name='SE_C')
+        
+        x = Global_Average_Pooling(x)
+        x = Dropout(x, rate=0.2, training=self.training)
+        x = flatten(x)
 
-    # fully connected, 7*7*128 inputs, 2048 outputs
-    'wd1': tf.get_variable('wd1',[9*9*128,2048],initializer=tf.contrib.layers.xavier_initializer()),
-    # 32 inputs, 26 outputs (class prediction)
-    'out': tf.get_variable('fc1',[2048,num_classes],initializer=tf.contrib.layers.xavier_initializer()),
-}
-biases = {
-    'bc1': tf.Variable(tf.zeros([8])),
-    'bc2': tf.Variable(tf.zeros([16])),
-    'bc3': tf.Variable(tf.zeros([32])),
-    'bc4': tf.Variable(tf.zeros([64])),
-    'bc5': tf.Variable(tf.zeros([64])),
-    'bc6': tf.Variable(tf.zeros([32])),
-    'bc7': tf.Variable(tf.zeros([4])),
-    'bd1': tf.Variable(tf.zeros([2048])),
-    'out': tf.Variable(tf.zeros([num_classes]))
-}
-
+        x = Fully_connected(x, layer_name='final_fully_connected')
+        return x
+    
 
 global_step = tf.Variable(0, trainable=False)
 decaylearning_rate = tf.train.exponential_decay(0.001, global_step,100, 0.9)
@@ -276,7 +493,7 @@ def trainModel():
             batch_x = np.reshape(batch_x, [batch_size, num_input])
 
             # run optimization op (backprop)
-            sess.run(train_op, feed_dict={X: batch_x, Y: batch_y, keep_prob: 1})
+            sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
 
             # if step % update_step == 0 or step == 1:
             #     loss, acc = sess.run([loss_op, accuracy], feed_dict={X: batch_x, Y: batch_y, keep_prob: 1})
@@ -300,7 +517,7 @@ def trainModel():
             #     toc = time.time()
 
             if step % display_step == 0 or step == 1:
-                loss, acc = sess.run([loss_op, accuracy], feed_dict={X: batch_x, Y: batch_y, keep_prob: 1})
+                loss, acc = sess.run([loss_op, accuracy], feed_dict={X: batch_x, Y: batch_y})
                 toc = time.time()
                 # for loss curve
                 x_point.append(step)
@@ -337,7 +554,7 @@ def testModel(images, labels):
                 test_labels[i, y[i]] = 1
 
             test_images = np.reshape(test_images, [test_batch_size, num_input])
-            acc,loss = sess.run([accuracy,loss_op], feed_dict={X: test_images, Y: test_labels, keep_prob: 1})
+            acc,loss = sess.run([accuracy,loss_op], feed_dict={X: test_images, Y: test_labels})
             acc_sum += acc * test_batch_size
             loss_sum += loss * test_batch_size
             # print("samples_untest = ", samples_untest, ", acc_current = ", acc)
@@ -383,20 +600,7 @@ with tf.Session(config=config) as sess:
     df.to_csv("PC9_4_data.csv")
     # test batch
     tfrecords_name = 'test1.tfrecord'
-    images, labels = inputs(tfrecords_name, batch_size, shuffle=False)
-    # create coord
-    coord2 = tf.train.Coordinator()
-    threads2 = tf.train.start_queue_runners(sess=sess, coord=coord2)
-
-    # if useCkpt:
-    #     ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
-    #     if ckpt and ckpt.model_checkpoint_path:
-    #         saver.restore(sess, ckpt.model_checkpoint_path)
-    #     else:
-    #         pass
-
-    # test the model
-    testModel(images, labels)
+    images, labels)
 
     # close coord
     coord.request_stop()
