@@ -7,3 +7,4 @@ model/
 *.gz
 cifar-10-batches-py/
 *.pyc
+*.png

@@ -1,0 +1,24 @@
+epoch: 1/300, train_loss: 0.6284, train_acc: 0.7708,test_loss:2683.7251, test_acc: 0.4708,test_recall: 0.0000, test_precision: 0.0000
+epoch: 1/300, train_loss: 0.4119, train_acc: 0.8906,test_loss:3506.5427, test_acc: 0.5417,test_recall: 0.0000, test_precision: 0.0000
+epoch: 2/300, train_loss: 0.4004, train_acc: 0.9271,test_loss:7693.5356, test_acc: 0.5000,test_recall: 0.0000, test_precision: 0.0000
+epoch: 3/300, train_loss: 0.3629, train_acc: 0.9271,test_loss:2198.5256, test_acc: 0.5042,test_recall: 0.0000, test_precision: 0.0000
+epoch: 4/300, train_loss: 0.3502, train_acc: 0.9219,test_loss:14.5565, test_acc: 0.5667,test_recall: 0.0000, test_precision: 0.0000
+epoch: 5/300, train_loss: 0.3547, train_acc: 0.9531,test_loss:705.3884, test_acc: 0.5333,test_recall: 0.0000, test_precision: 0.0000
+epoch: 6/300, train_loss: 0.2825, train_acc: 0.9479,test_loss:40.0457, test_acc: 0.4875,test_recall: 0.0000, test_precision: 0.0000
+epoch: 7/300, train_loss: 0.2275, train_acc: 0.9792,test_loss:3013.4490, test_acc: 0.5042,test_recall: 0.0000, test_precision: 0.0000
+epoch: 8/300, train_loss: 0.2894, train_acc: 0.9583,test_loss:199.4446, test_acc: 0.4833,test_recall: 0.0000, test_precision: 0.0000
+epoch: 9/300, train_loss: 0.2880, train_acc: 0.9635,test_loss:1.4723, test_acc: 0.5375,test_recall: 0.0000, test_precision: 0.0000
+epoch: 10/300, train_loss: 0.2133, train_acc: 0.9635,test_loss:1.7061, test_acc: 0.5042,test_recall: 0.0000, test_precision: 0.0000
+epoch: 11/300, train_loss: 0.3645, train_acc: 0.9167,test_loss:2.7067, test_acc: 0.5042,test_recall: 0.0000, test_precision: 0.0000
+epoch: 12/300, train_loss: 0.2493, train_acc: 0.9688,test_loss:2.4066, test_acc: 0.4958,test_recall: 0.0000, test_precision: 0.0000
+epoch: 13/300, train_loss: 0.1694, train_acc: 0.9792,test_loss:2.8833, test_acc: 0.4667,test_recall: 0.0000, test_precision: 0.0000
+epoch: 1/5, train_loss: 0.1492, train_acc: 0.9792,test_loss:4.6704, test_acc: 0.5042,test_recall: 0.0000, test_precision: 0.0000
+epoch: 2/5, train_loss: 0.2091, train_acc: 0.9740,test_loss:2.7614, test_acc: 0.5000,test_recall: 0.0000, test_precision: 0.0000
+epoch: 3/5, train_loss: 0.1444, train_acc: 0.9792,test_loss:28.3365, test_acc: 0.5208,test_recall: 0.0000, test_precision: 0.0000
+epoch: 4/5, train_loss: 0.2369, train_acc: 0.9479,test_loss:16.0091, test_acc: 0.4708,test_recall: 0.0000, test_precision: 0.0000
+epoch: 5/5, train_loss: 0.1616, train_acc: 0.9792,test_loss:2695.8743, test_acc: 0.4792,test_recall: 0.0000, test_precision: 0.0000
+epoch: 1/5, train_loss: 0.2109, train_acc:0.9688,test_loss:135.0805,test_acc: 0.4958, test_acc2: 0.4958, test_recall: 0.0000, test_precision: 0.0000
+epoch: 2/5, train_loss: 0.2140, train_acc:0.9583,test_loss:0.9907,test_acc: 0.5458, test_acc2: 0.5458, test_recall: 0.0000, test_precision: 0.0000
+epoch: 3/5, train_loss: 0.1292, train_acc:0.9896,test_loss:4.8880,test_acc: 0.5000, test_acc2: 0.5000, test_recall: 0.0000, test_precision: 0.0000
+epoch: 4/5, train_loss: 0.1855, train_acc:0.9740,test_loss:0.4359,test_acc: 0.8125, test_acc2: 0.8125, test_recall: 0.0000, test_precision: 0.0000
+epoch: 5/5, train_loss: 0.1649, train_acc:0.9688,test_loss:1101.7094,test_acc: 0.4625, test_acc2: 0.4625, test_recall: 0.0000, test_precision: 0.0000

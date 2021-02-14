@@ -61,6 +61,32 @@ def Dropout(x, rate, training):
     return tf.layers.dropout(inputs=x, rate=rate, training=training)
 
 
+class CNN_model():
+    def __init__(self, x, class_num):
+        self.class_num = class_num
+        self.model = self.steam(x)
+
+    def steam(self,x):
+        conv1 = conv_layer(x, filter=8, kernel=[3, 3], stride=2, padding='SAME')
+        conv1 = Max_pooling(conv1)
+        conv2 = conv_layer(x, filter=16, kernel=[3, 3], stride=2, padding='SAME')
+        conv2 = Max_pooling(conv2)
+        conv3 = conv_layer(x, filter=32, kernel=[3, 3], stride=2, padding='SAME')
+        conv3 = Max_pooling(conv3)
+        conv4 = conv_layer(x, filter=64, kernel=[3, 3], stride=2, padding='SAME')
+        conv4 = Max_pooling(conv4)
+        conv5 = conv_layer(x, filter=64, kernel=[3, 3], stride=2, padding='SAME')
+        conv5 = Max_pooling(conv5)
+        #conv6 = conv_layer(x, filter= 256, kernel=[3, 3], stride=2, padding='SAME')
+        #conv6 = Max_pooling(conv6)
+        #conv7 = conv_layer(x, filter=128, kernel=[3, 3], stride=2, padding='SAME')
+        #conv7 = Max_pooling(conv7)
+
+        fc1 = flatten(conv5)
+        x = Fully_connected(fc1, self.class_num)
+        return x
+
+
 class SE_Inception_resnet_v2():
     def __init__(self, x, class_num, reduction_ratio, training):
         self.training = training
