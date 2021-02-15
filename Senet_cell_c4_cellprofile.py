@@ -37,7 +37,9 @@ def Evaluate(sess):
 
     test_feed_dict = {
         x: test_batch_x,
-        label: test_batch_y
+        label: test_batch_y,
+        learning_rate: epoch_learning_rate,
+        training_flag: False
     }
     sess.run(tf.local_variables_initializer())
     test_pred, test_label = sess.run([pred, data_label], feed_dict = test_feed_dict)
@@ -126,7 +128,7 @@ with tf.Session() as sess:
 
     summary_writer = tf.summary.FileWriter(result_path + '/logs', sess.graph)
 
-    #epoch_learning_rate = init_learning_rate
+    epoch_learning_rate = init_learning_rate
     x_point = [0]*total_epochs
     y_train_loss = [0]*total_epochs
     y_train_acc =  [0]*total_epochs
@@ -138,8 +140,8 @@ with tf.Session() as sess:
     y_test_FN = [0]*total_epochs
     y_test_AUC = [0]*total_epochs
     for epoch in range(1, total_epochs + 1):
-        #if epoch % 30 == 0 :
-        #    epoch_learning_rate = epoch_learning_rate / 10
+        if epoch % 30 == 0 :
+            epoch_learning_rate = epoch_learning_rate / 10
 
         pre_index = 0
         train_acc = 0.0
@@ -176,6 +178,8 @@ with tf.Session() as sess:
             train_feed_dict = {
                 x: batch_x,
                 label: batch_y,
+                learning_rate: epoch_learning_rate,
+                training_flag: True
             }
 
             _, batch_loss = sess.run([train, cost], feed_dict=train_feed_dict)
