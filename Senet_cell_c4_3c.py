@@ -7,7 +7,7 @@ from PIL import Image
 import pandas as pd
 from tqdm import tqdm
 from model import *
-from dataset import *
+from dataset_3c import *
 import matplotlib.pyplot as plt
 #import pdb
 
